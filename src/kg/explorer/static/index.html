@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prediction Market · Knowledge Graph</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f1117;
+    color: #e2e8f0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 20px;
+    background: #161b27;
+    border-bottom: 1px solid #1e2a3a;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #a78bfa;
+    letter-spacing: 0.02em;
+  }
+  header .subtitle {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  /* ── Stats pills ── */
+  .stats-bar {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+    align-items: center;
+  }
+  .stat-pill {
+    background: #1e2a3a;
+    border: 1px solid #2d3f55;
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .stat-pill span { color: #e2e8f0; font-weight: 600; }
+
+  /* ── Main layout ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    background: #161b27;
+    border-right: 1px solid #1e2a3a;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid #1e2a3a;
+  }
+  .sidebar-section h3 {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #475569;
+    margin-bottom: 10px;
+  }
+
+  /* Filter controls */
+  .filter-group { margin-bottom: 10px; }
+  .filter-group label {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  select, input[type=range] {
+    width: 100%;
+    background: #1e2a3a;
+    border: 1px solid #2d3f55;
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 12px;
+    padding: 5px 8px;
+    outline: none;
+  }
+  select:focus { border-color: #a78bfa; }
+
+  /* Toggle switches */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .toggle-row label { font-size: 12px; color: #94a3b8; }
+  .toggle {
+    position: relative;
+    width: 32px;
+    height: 18px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: #2d3f55;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .slider:before {
+    content: "";
+    position: absolute;
+    width: 12px; height: 12px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  input:checked + .slider { background: #a78bfa; }
+  input:checked + .slider:before { transform: translateX(14px); }
+
+  /* Legend */
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 3px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .legend-item:hover { background: #1e2a3a; }
+  .legend-item.muted { opacity: 0.35; }
+  .legend-dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-count {
+    margin-left: auto;
+    font-size: 10px;
+    color: #475569;
+  }
+
+  /* Apply button */
+  .btn-apply {
+    width: 100%;
+    padding: 8px;
+    background: #a78bfa;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 6px;
+  }
+  .btn-apply:hover { background: #8b5cf6; }
+
+  /* ── Graph canvas ── */
+  #graph-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #graph-svg {
+    width: 100%;
+    height: 100%;
+    background: #0f1117;
+  }
+
+  /* Zoom controls */
+  .zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .zoom-btn {
+    width: 32px; height: 32px;
+    background: #161b27;
+    border: 1px solid #2d3f55;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .zoom-btn:hover { background: #1e2a3a; color: #e2e8f0; }
+
+  /* ── Info panel (right, shown on node click) ── */
+  #info-panel {
+    width: 260px;
+    background: #161b27;
+    border-left: 1px solid #1e2a3a;
+    display: none;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  #info-panel.visible { display: flex; }
+  .info-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #1e2a3a;
+  }
+  .info-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .info-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+    word-break: break-word;
+  }
+  .info-body { padding: 12px 16px; }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #1e2a3a;
+    font-size: 11px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: #64748b; }
+  .info-val { color: #e2e8f0; font-weight: 500; text-align: right; max-width: 140px; word-break: break-all; }
+  .info-close {
+    background: none;
+    border: none;
+    color: #475569;
+    font-size: 18px;
+    cursor: pointer;
+    float: right;
+    line-height: 1;
+  }
+  .info-close:hover { color: #e2e8f0; }
+
+  /* ── Loading overlay ── */
+  #loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(15,17,23,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    gap: 14px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #1e2a3a;
+    border-top-color: #a78bfa;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: #64748b; font-size: 13px; }
+
+  /* ── Tooltip ── */
+  #tooltip {
+    position: absolute;
+    background: #161b27;
+    border: 1px solid #2d3f55;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #e2e8f0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 220px;
+    z-index: 30;
+  }
+  #tooltip strong { display: block; margin-bottom: 2px; }
+  #tooltip .tt-type { font-size: 10px; color: #64748b; }
+
+  /* SVG styles */
+  .node-label {
+    font-size: 9px;
+    fill: #94a3b8;
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .link {
+    stroke-opacity: 0.35;
+    stroke-width: 1.2px;
+  }
+  .link.highlighted { stroke-opacity: 0.9; stroke-width: 2px; }
+  .node circle { cursor: pointer; transition: r 0.15s; }
+  .node circle:hover { filter: brightness(1.3); }
+  .node.dimmed { opacity: 0.12; }
+  .node.highlighted circle { filter: drop-shadow(0 0 6px currentColor); }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header>
+  <div>
+    <h1>Prediction Market · Knowledge Graph</h1>
+    <div class="subtitle" id="mode-subtitle">PMO Ontology · Karkar &amp; Chopra 2025</div>
+  </div>
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-pill">Nodes <span id="stat-nodes">—</span></div>
+    <div class="stat-pill">Links <span id="stat-links">—</span></div>
+    <div class="stat-pill">Triples <span id="stat-triples">—</span></div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <h3>Filters</h3>
+      <div class="filter-group">
+        <label>Domain</label>
+        <select id="filter-domain">
+          <option value="">All domains</option>
+          <option>Politics</option>
+          <option>Finance</option>
+          <option>Sports</option>
+          <option>Technology</option>
+          <option>Entertainment</option>
+          <option>Geopolitics</option>
+          <option>Crypto</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Platform</label>
+        <select id="filter-platform">
+          <option value="">Both platforms</option>
+          <option value="kalshi">Kalshi</option>
+          <option value="polymarket">Polymarket</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Market limit: <span id="limit-label">60</span></label>
+        <input type="range" id="filter-limit" min="10" max="300" value="60" step="10" />
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Node Types</h3>
+      <div class="toggle-row">
+        <label>Markets</label>
+        <label class="toggle"><input type="checkbox" id="tog-markets" checked /><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <label>LLM Forecasts</label>
+        <label class="toggle"><input type="checkbox" id="tog-forecasts" checked /><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <label>News Items</label>
+        <label class="toggle"><input type="checkbox" id="tog-news" /><span class="slider"></span></label>
+      </div>
+      <button class="btn-apply" onclick="loadGraph()">Reload Graph</button>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Legend</h3>
+      <div id="legend"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Graph Controls</h3>
+      <div class="filter-group">
+        <label>Link distance: <span id="dist-label">80</span></label>
+        <input type="range" id="ctrl-dist" min="30" max="200" value="80" step="10" />
+      </div>
+      <div class="filter-group">
+        <label>Charge strength: <span id="charge-label">-120</span></label>
+        <input type="range" id="ctrl-charge" min="-400" max="-20" value="-120" step="20" />
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Graph canvas -->
+  <div id="graph-container">
+    <svg id="graph-svg"></svg>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>Loading knowledge graph…</p>
+    </div>
+    <div id="tooltip"></div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoomIn()">+</button>
+      <button class="zoom-btn" onclick="zoomReset()">⊙</button>
+      <button class="zoom-btn" onclick="zoomOut()">−</button>
+    </div>
+  </div>
+
+  <!-- Info panel -->
+  <div id="info-panel">
+    <div class="info-header">
+      <button class="info-close" onclick="closeInfo()">×</button>
+      <div class="info-type-badge" id="info-badge"></div>
+      <div class="info-label" id="info-label"></div>
+    </div>
+    <div class="info-body" id="info-body"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── Config ──────────────────────────────────────────────────────────────────
+// When the FastAPI backend is unreachable, fall back to the pre-baked data.json
+// This enables deployment as a fully static site (Vercel, GitHub Pages, etc.)
+let _staticCache = null;   // full data.json payload, cached after first load
+
+const NODE_COLORS = {
+  Domain:      '#a78bfa',
+  Market:      '#38bdf8',
+  LLMForecast: '#fb923c',
+  FailureMode: '#f87171',
+  NewsItem:    '#4ade80',
+};
+const LINK_COLORS = {
+  belongsToDomain:    '#a78bfa55',
+  forecastsMarket:    '#fb923c55',
+  exhibitsFailureMode:'#f8717155',
+  usesNewsItem:       '#4ade8055',
+};
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let simulation, svg, zoomBehavior, gMain;
+let graphData = { nodes: [], links: [] };
+let hiddenTypes = new Set();
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initSVG();
+  loadStats();
+  loadGraph();
+  bindControls();
+});
+
+function initSVG() {
+  const container = document.getElementById('graph-container');
+  svg = d3.select('#graph-svg');
+
+  zoomBehavior = d3.zoom()
+    .scaleExtent([0.05, 8])
+    .on('zoom', (e) => gMain.attr('transform', e.transform));
+
+  svg.call(zoomBehavior);
+
+  // Defs: arrow markers
+  const defs = svg.append('defs');
+  Object.entries(LINK_COLORS).forEach(([rel, color]) => {
+    defs.append('marker')
+      .attr('id', `arrow-${rel}`)
+      .attr('viewBox', '0 -4 8 8')
+      .attr('refX', 18).attr('refY', 0)
+      .attr('markerWidth', 5).attr('markerHeight', 5)
+      .attr('orient', 'auto')
+      .append('path')
+        .attr('d', 'M0,-4L8,0L0,4')
+        .attr('fill', color.slice(0,7) + 'cc');
+  });
+
+  gMain = svg.append('g').attr('class', 'main-g');
+}
+
+// ─── Load graph data ──────────────────────────────────────────────────────────
+async function loadGraph() {
+  document.getElementById('loading').style.display = 'flex';
+  closeInfo();
+
+  const domain   = document.getElementById('filter-domain').value;
+  const platform = document.getElementById('filter-platform').value;
+  const limit    = parseInt(document.getElementById('filter-limit').value, 10);
+  const markets  = document.getElementById('tog-markets').checked;
+  const forecasts= document.getElementById('tog-forecasts').checked;
+  const news     = document.getElementById('tog-news').checked;
+
+  try {
+    // ── Try live API first ───────────────────────────────────────────────────
+    const params = new URLSearchParams({
+      markets, forecasts, news,
+      market_limit: limit, forecast_limit: Math.floor(limit * 1.3),
+      ...(domain   && { domain }),
+      ...(platform && { platform }),
+    });
+    const res = await fetch(`/api/graph?${params}`, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) throw new Error('api_error');
+    graphData = await res.json();
+    if (graphData.error) throw new Error(graphData.error);
+    document.getElementById('mode-subtitle').textContent = 'Live · Apache Jena Fuseki';
+  } catch (_) {
+    // ── Static fallback: load data.json and filter client-side ───────────────
+    document.getElementById('mode-subtitle').textContent = 'Static snapshot · data.json';
+    if (!_staticCache) {
+      const r = await fetch('./data.json');
+      if (!r.ok) { showError('Cannot reach API and no data.json found.'); return; }
+      _staticCache = await r.json();
+    }
+    graphData = filterStatic(_staticCache, { domain, platform, limit, markets, forecasts, news });
+    document.getElementById('stat-triples').textContent =
+      (_staticCache.stats ? _staticCache.stats.node_count * 11 : '—').toLocaleString();
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  renderGraph(graphData);
+  updateStats(graphData.stats);
+  renderLegend(graphData.stats.node_types);
+}
+
+// ─── Client-side filtering for static mode ───────────────────────────────────
+function filterStatic(all, { domain, platform, limit, markets, forecasts, news }) {
+  const nodes = {};
+  const addNode = n => { nodes[n.id] = n; };
+
+  // Always include Domain + FailureMode
+  all.nodes.filter(n => n.type === 'Domain' || n.type === 'FailureMode').forEach(addNode);
+
+  // Markets
+  if (markets) {
+    let mkt = all.nodes.filter(n => n.type === 'Market');
+    if (domain)   mkt = mkt.filter(n => n.domain === domain);
+    if (platform) mkt = mkt.filter(n => n.platform === platform);
+    mkt.slice(0, limit).forEach(addNode);
+  }
+
+  // Forecasts
+  if (forecasts) {
+    const fcLimit = Math.floor(limit * 1.3);
+    let fc = all.nodes.filter(n => n.type === 'LLMForecast');
+    fc.slice(0, fcLimit).forEach(addNode);
+  }
+
+  // News
+  if (news) {
+    all.nodes.filter(n => n.type === 'NewsItem').forEach(addNode);
+  }
+
+  // Only keep links where both endpoints are in the filtered node set
+  const links = all.links.filter(l => {
+    const s = l.source.id || l.source;
+    const t = l.target.id || l.target;
+    return nodes[s] && nodes[t];
+  });
+
+  const typeCounts = {};
+  Object.values(nodes).forEach(n => { typeCounts[n.type] = (typeCounts[n.type] || 0) + 1; });
+
+  return {
+    nodes: Object.values(nodes),
+    links,
+    stats: { node_count: Object.keys(nodes).length, link_count: links.length, node_types: typeCounts },
+  };
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats', { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('stat-triples').textContent =
+      data.total_triples.toLocaleString();
+  } catch (_) {}
+}
+
+// ─── Render graph ─────────────────────────────────────────────────────────────
+function renderGraph(data) {
+  gMain.selectAll('*').remove();
+
+  if (!data.nodes.length) {
+    gMain.append('text')
+      .attr('x', window.innerWidth / 2 - 250)
+      .attr('y', 300)
+      .attr('fill', '#475569')
+      .attr('font-size', 16)
+      .text('No nodes found. Run the ETL or ForecastIndexer first.');
+    return;
+  }
+
+  const dist   = +document.getElementById('ctrl-dist').value;
+  const charge = +document.getElementById('ctrl-charge').value;
+
+  // Simulation
+  simulation = d3.forceSimulation(data.nodes)
+    .force('link', d3.forceLink(data.links).id(d => d.id).distance(d => {
+      if (d.rel === 'belongsToDomain') return dist * 1.4;
+      if (d.rel === 'exhibitsFailureMode') return dist * 0.9;
+      return dist;
+    }))
+    .force('charge', d3.forceManyBody().strength(charge))
+    .force('center', d3.forceCenter(
+      document.getElementById('graph-container').offsetWidth / 2,
+      document.getElementById('graph-container').offsetHeight / 2,
+    ))
+    .force('collision', d3.forceCollide().radius(d => (d.size || 10) + 3));
+
+  // Links
+  const link = gMain.append('g').attr('class', 'links')
+    .selectAll('line')
+    .data(data.links)
+    .join('line')
+    .attr('class', 'link')
+    .attr('stroke', d => (LINK_COLORS[d.rel] || '#2d3f5588'))
+    .attr('marker-end', d => `url(#arrow-${d.rel})`);
+
+  // Nodes
+  const node = gMain.append('g').attr('class', 'nodes')
+    .selectAll('g')
+    .data(data.nodes)
+    .join('g')
+    .attr('class', 'node')
+    .call(d3.drag()
+      .on('start', dragStart)
+      .on('drag',  dragging)
+      .on('end',   dragEnd))
+    .on('click', (event, d) => { event.stopPropagation(); selectNode(d, node, link); })
+    .on('mouseover', showTooltip)
+    .on('mousemove', moveTooltip)
+    .on('mouseout', hideTooltip);
+
+  node.append('circle')
+    .attr('r', d => d.size || 10)
+    .attr('fill', d => d.color || NODE_COLORS[d.type] || '#94a3b8')
+    .attr('fill-opacity', 0.85)
+    .attr('stroke', d => d.color || NODE_COLORS[d.type] || '#94a3b8')
+    .attr('stroke-width', 1.5)
+    .attr('stroke-opacity', 0.5);
+
+  // Labels only for larger nodes (Domains, FailureModes)
+  node.filter(d => (d.size || 10) >= 18)
+    .append('text')
+    .attr('class', 'node-label')
+    .attr('dy', d => (d.size || 10) + 11)
+    .text(d => d.label);
+
+  // Click on background deselects
+  svg.on('click', () => {
+    node.classed('dimmed', false).classed('highlighted', false);
+    link.classed('highlighted', false).style('stroke-opacity', 0.35);
+  });
+
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+}
+
+// ─── Node selection ───────────────────────────────────────────────────────────
+function selectNode(d, nodeSelection, linkSelection) {
+  const connectedIds = new Set([d.id]);
+  linkSelection.each(l => {
+    const srcId = l.source.id || l.source;
+    const tgtId = l.target.id || l.target;
+    if (srcId === d.id || tgtId === d.id) {
+      connectedIds.add(srcId);
+      connectedIds.add(tgtId);
+    }
+  });
+
+  nodeSelection
+    .classed('dimmed', n => !connectedIds.has(n.id))
+    .classed('highlighted', n => n.id === d.id);
+
+  linkSelection
+    .classed('highlighted', l => {
+      const s = l.source.id || l.source;
+      const t = l.target.id || l.target;
+      return s === d.id || t === d.id;
+    })
+    .style('stroke-opacity', l => {
+      const s = l.source.id || l.source;
+      const t = l.target.id || l.target;
+      return (s === d.id || t === d.id) ? 0.9 : 0.05;
+    });
+
+  showInfoPanel(d);
+}
+
+// ─── Info panel ───────────────────────────────────────────────────────────────
+function showInfoPanel(d) {
+  const panel = document.getElementById('info-panel');
+  panel.classList.add('visible');
+
+  const badge = document.getElementById('info-badge');
+  badge.textContent = d.type;
+  badge.style.background = (d.color || NODE_COLORS[d.type] || '#94a3b8') + '33';
+  badge.style.color = d.color || NODE_COLORS[d.type] || '#94a3b8';
+  badge.style.border = `1px solid ${d.color || NODE_COLORS[d.type] || '#94a3b8'}55`;
+
+  document.getElementById('info-label').textContent = d.label;
+
+  const body = document.getElementById('info-body');
+  const skip = new Set(['id', 'label', 'type', 'color', 'x', 'y', 'vx', 'vy', 'fx', 'fy', 'index']);
+  const rows = Object.entries(d)
+    .filter(([k]) => !skip.has(k))
+    .map(([k, v]) => `
+      <div class="info-row">
+        <span class="info-key">${k}</span>
+        <span class="info-val">${formatVal(v)}</span>
+      </div>`).join('');
+  body.innerHTML = rows || '<div style="color:#475569;font-size:12px">No additional properties</div>';
+}
+
+function formatVal(v) {
+  if (typeof v === 'number') return v.toFixed ? v.toFixed(3) : v;
+  if (typeof v === 'boolean') return v ? 'yes' : 'no';
+  return String(v).slice(0, 80);
+}
+
+function closeInfo() {
+  document.getElementById('info-panel').classList.remove('visible');
+}
+
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+function showTooltip(event, d) {
+  const tt = document.getElementById('tooltip');
+  tt.innerHTML = `<strong>${d.label}</strong><div class="tt-type">${d.type}${d.platform ? ' · ' + d.platform : ''}</div>`;
+  tt.style.opacity = 1;
+  moveTooltip(event);
+}
+function moveTooltip(event) {
+  const tt = document.getElementById('tooltip');
+  tt.style.left = (event.offsetX + 14) + 'px';
+  tt.style.top  = (event.offsetY - 10) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('tooltip').style.opacity = 0;
+}
+
+// ─── Legend ───────────────────────────────────────────────────────────────────
+function renderLegend(typeCounts) {
+  const el = document.getElementById('legend');
+  el.innerHTML = Object.entries(NODE_COLORS).map(([type, color]) => {
+    const count = typeCounts[type] || 0;
+    const muted = hiddenTypes.has(type) ? 'muted' : '';
+    return `
+      <div class="legend-item ${muted}" onclick="toggleType('${type}')" data-type="${type}">
+        <div class="legend-dot" style="background:${color}"></div>
+        ${type}
+        <span class="legend-count">${count}</span>
+      </div>`;
+  }).join('');
+}
+
+function toggleType(type) {
+  if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+  else hiddenTypes.add(type);
+
+  // Toggle visibility in the graph
+  d3.selectAll('.node')
+    .style('display', d => hiddenTypes.has(d.type) ? 'none' : null);
+  d3.selectAll('.link')
+    .style('display', l => {
+      const sType = (graphData.nodes.find(n => n.id === (l.source.id || l.source)) || {}).type;
+      const tType = (graphData.nodes.find(n => n.id === (l.target.id || l.target)) || {}).type;
+      return (hiddenTypes.has(sType) || hiddenTypes.has(tType)) ? 'none' : null;
+    });
+
+  // Update legend
+  document.querySelectorAll('.legend-item').forEach(el => {
+    el.classList.toggle('muted', hiddenTypes.has(el.dataset.type));
+  });
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function updateStats(stats) {
+  document.getElementById('stat-nodes').textContent = stats.node_count.toLocaleString();
+  document.getElementById('stat-links').textContent = stats.link_count.toLocaleString();
+}
+
+// ─── Drag ────────────────────────────────────────────────────────────────────
+function dragStart(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragging(event, d) { d.fx = event.x; d.fy = event.y; }
+function dragEnd(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// ─── Zoom ────────────────────────────────────────────────────────────────────
+function zoomIn()    { svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4); }
+function zoomOut()   { svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7); }
+function zoomReset() { svg.transition().duration(400).call(zoomBehavior.transform, d3.zoomIdentity); }
+
+// ─── Controls ────────────────────────────────────────────────────────────────
+function bindControls() {
+  const limitSlider = document.getElementById('filter-limit');
+  limitSlider.addEventListener('input', () => {
+    document.getElementById('limit-label').textContent = limitSlider.value;
+  });
+
+  const distSlider = document.getElementById('ctrl-dist');
+  distSlider.addEventListener('input', () => {
+    document.getElementById('dist-label').textContent = distSlider.value;
+    if (simulation) {
+      simulation.force('link').distance(+distSlider.value);
+      simulation.alpha(0.3).restart();
+    }
+  });
+
+  const chargeSlider = document.getElementById('ctrl-charge');
+  chargeSlider.addEventListener('input', () => {
+    document.getElementById('charge-label').textContent = chargeSlider.value;
+    if (simulation) {
+      simulation.force('charge').strength(+chargeSlider.value);
+      simulation.alpha(0.3).restart();
+    }
+  });
+}
+
+// ─── Error ───────────────────────────────────────────────────────────────────
+function showError(msg) {
+  document.getElementById('loading').innerHTML = `
+    <div style="color:#f87171;font-size:14px;text-align:center;padding:20px;max-width:400px">
+      <div style="font-size:28px;margin-bottom:12px">⚠</div>
+      <strong>Cannot load graph</strong><br/><br/>
+      <span style="color:#64748b">${msg}</span>
+    </div>`;
+}
+</script>
+</body>
+</html>

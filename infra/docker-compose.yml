@@ -1,0 +1,20 @@
+services:
+  fuseki:
+    image: stain/jena-fuseki:5.1.0
+    ports:
+      - "3030:3030"
+    environment:
+      ADMIN_PASSWORD: ${FUSEKI_PASSWORD:-fuseki-dev}
+      FUSEKI_DATASET: pmo
+      JVM_ARGS: -Xmx4g -XX:MaxDirectMemorySize=2g
+    volumes:
+      - fuseki_data:/fuseki
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -u admin:$${ADMIN_PASSWORD:-fuseki-dev} http://localhost:3030/$$/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  fuseki_data:

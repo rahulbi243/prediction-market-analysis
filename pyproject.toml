@@ -22,6 +22,18 @@ dependencies = [
     "web3>=6.0.0",
     "simple-term-menu>=1.6.0",
     "python-dotenv>=1.2.1",
+    # Phase 1: KG
+    "rdflib>=7.0.0",
+    "sparqlwrapper>=2.0.0",
+    # Phase 2: Agent
+    "openai>=1.40.0",
+    "duckduckgo-search>=6.0.0",
+    "exa-py>=1.0.0",
+    # Phase 4/5: Benchmarks
+    "scikit-learn>=1.4.0",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "pyoxigraph>=0.3.22",
 ]
 
 [dependency-groups]

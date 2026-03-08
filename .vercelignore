@@ -1,0 +1,16 @@
+# Exclude everything except the static explorer files
+data/
+.venv/
+__pycache__/
+*.parquet
+*.pyc
+*.pyo
+src/kg/explorer/static/graph.nq
+infra/
+docs/
+scripts/
+tests/
+notebooks/
+*.log
+.env
+.env.*

@@ -1,0 +1,250 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix pmo:  <http://pmo.research/ontology#> .
+@prefix pmir: <http://pmo.research/instance/> .
+
+# ── Ontology declaration ──────────────────────────────────────────────────────
+
+pmo:PredictionMarketOntology a owl:Ontology ;
+    rdfs:label "Prediction Market Ontology" ;
+    rdfs:comment "OWL ontology for prediction market research platform (Karkar & Chopra, 2025 extension)" .
+
+# ── Classes ───────────────────────────────────────────────────────────────────
+
+pmo:Market a owl:Class ;
+    rdfs:label "Market" ;
+    rdfs:comment "A prediction market contract." .
+
+pmo:KalshiMarket a owl:Class ;
+    rdfs:subClassOf pmo:Market ;
+    rdfs:label "Kalshi Market" .
+
+pmo:PolymarketMarket a owl:Class ;
+    rdfs:subClassOf pmo:Market ;
+    rdfs:label "Polymarket Market" .
+
+pmo:Event a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "A real-world event that one or more markets resolve against." .
+
+pmo:Outcome a owl:Class ;
+    rdfs:label "Outcome" ;
+    rdfs:comment "The binary resolution of a market (YES or NO)." .
+
+pmo:Trade a owl:Class ;
+    rdfs:label "Trade" ;
+    rdfs:comment "A single trade executed in a prediction market." .
+
+pmo:LLMForecast a owl:Class ;
+    rdfs:label "LLM Forecast" ;
+    rdfs:comment "A probability forecast produced by an LLM agent for a market." .
+
+pmo:NewsItem a owl:Class ;
+    rdfs:label "News Item" ;
+    rdfs:comment "A news snippet retrieved as context for a forecast." .
+
+pmo:Domain a owl:Class ;
+    rdfs:label "Domain" ;
+    rdfs:comment "A thematic domain used to categorise markets." .
+
+pmo:FailureMode a owl:Class ;
+    rdfs:label "Failure Mode" ;
+    rdfs:comment "A recurring reasoning failure pattern observed in LLM forecasts." .
+
+# ── Object Properties ─────────────────────────────────────────────────────────
+
+pmo:belongsToDomain a owl:ObjectProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  pmo:Domain ;
+    rdfs:label  "belongs to domain" .
+
+pmo:hasOutcome a owl:ObjectProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  pmo:Outcome ;
+    rdfs:label  "has outcome" .
+
+pmo:forecastsMarket a owl:ObjectProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  pmo:Market ;
+    rdfs:label  "forecasts market" .
+
+pmo:usesNewsItem a owl:ObjectProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  pmo:NewsItem ;
+    rdfs:label  "uses news item" .
+
+pmo:exhibitsFailureMode a owl:ObjectProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  pmo:FailureMode ;
+    rdfs:label  "exhibits failure mode" .
+
+# ── Datatype Properties ───────────────────────────────────────────────────────
+
+pmo:marketId a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "market ID" .
+
+pmo:platform a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "platform" .
+
+pmo:question a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "question text" .
+
+pmo:result a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "resolution result (yes/no)" .
+
+pmo:volume a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "trading volume" .
+
+pmo:createdAt a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:label  "creation timestamp" .
+
+pmo:closeTime a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:label  "close timestamp" .
+
+pmo:subcategory a owl:DatatypeProperty ;
+    rdfs:domain pmo:Market ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "subcategory" .
+
+pmo:rawProbability a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "raw LLM probability" .
+
+pmo:calibratedProbability a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "calibrated probability" .
+
+pmo:confidenceLow a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "confidence interval lower bound" .
+
+pmo:confidenceHigh a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "confidence interval upper bound" .
+
+pmo:condition a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "forecast condition (raw|news)" .
+
+pmo:model a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "LLM model identifier" .
+
+pmo:reasoning a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "full reasoning text" .
+
+pmo:forecasted_at a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:label  "forecast timestamp" .
+
+pmo:brierScore a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "Brier score (post-resolution)" .
+
+pmo:edge a owl:DatatypeProperty ;
+    rdfs:domain pmo:LLMForecast ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "probability edge vs market price" .
+
+pmo:domainAccuracy a owl:DatatypeProperty ;
+    rdfs:domain pmo:Domain ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "accuracy rate for domain" .
+
+pmo:failureModeRate a owl:DatatypeProperty ;
+    rdfs:domain pmo:Domain ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "failure mode rate for domain" .
+
+pmo:newsSensitivityIndex a owl:DatatypeProperty ;
+    rdfs:domain pmo:Domain ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "news sensitivity index" .
+
+pmo:breakEvenHorizon a owl:DatatypeProperty ;
+    rdfs:domain pmo:Domain ;
+    rdfs:range  xsd:double ;
+    rdfs:label  "breakeven days-to-close horizon" .
+
+pmo:newsTitle a owl:DatatypeProperty ;
+    rdfs:domain pmo:NewsItem ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "news title" .
+
+pmo:newsSnippet a owl:DatatypeProperty ;
+    rdfs:domain pmo:NewsItem ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "news snippet text" .
+
+pmo:newsUrl a owl:DatatypeProperty ;
+    rdfs:domain pmo:NewsItem ;
+    rdfs:range  xsd:anyURI ;
+    rdfs:label  "news URL" .
+
+pmo:newsPublishedAt a owl:DatatypeProperty ;
+    rdfs:domain pmo:NewsItem ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:label  "publication timestamp" .
+
+# ── Named Individuals: Domains ────────────────────────────────────────────────
+
+pmo:Politics a pmo:Domain ;
+    rdfs:label "Politics" .
+
+pmo:Finance a pmo:Domain ;
+    rdfs:label "Finance" .
+
+pmo:Sports a pmo:Domain ;
+    rdfs:label "Sports" .
+
+pmo:Technology a pmo:Domain ;
+    rdfs:label "Technology" .
+
+pmo:Entertainment a pmo:Domain ;
+    rdfs:label "Entertainment" .
+
+pmo:Geopolitics a pmo:Domain ;
+    rdfs:label "Geopolitics" .
+
+pmo:Crypto a pmo:Domain ;
+    rdfs:label "Crypto" .
+
+# ── Named Individuals: Failure Modes ─────────────────────────────────────────
+
+pmo:RecencyBias a pmo:FailureMode ;
+    rdfs:label "Recency Bias" ;
+    rdfs:comment "Over-weighting recent events or news in probability estimates." .
+
+pmo:RumourOverweighting a pmo:FailureMode ;
+    rdfs:label "Rumour Overweighting" ;
+    rdfs:comment "Treating unconfirmed or speculative sources as high-confidence evidence." .
+
+pmo:DefinitionDrift a pmo:FailureMode ;
+    rdfs:label "Definition Drift" ;
+    rdfs:comment "Ambiguous resolution criteria causing inconsistent probability framing." .

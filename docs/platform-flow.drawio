@@ -1,0 +1,411 @@
+<mxfile host="app.diagrams.net" modified="2026-03-07T00:00:00.000Z" agent="Claude" version="21.0.0">
+  <diagram name="Prediction Market Research Platform" id="platform-flow">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- TITLE -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="title" value="Prediction Market Research Platform" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="427" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- DATA SOURCES (top-left) -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_data" value="Raw Data" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="300" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="kalshi_parquet" value="Kalshi Markets&#xa;199K markets · Parquet&#xa;data/kalshi/markets/*.parquet" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="grp_data">
+          <mxGeometry x="20" y="40" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="poly_parquet" value="Polymarket Markets&#xa;420K markets · Parquet&#xa;data/polymarket/markets/*.parquet" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="grp_data">
+          <mxGeometry x="160" y="40" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" value="PostgreSQL&#xa;tradedata · port 5434&#xa;(ingest_postgres.py)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontSize=10;" vertex="1" parent="grp_data">
+          <mxGeometry x="90" y="130" width="120" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 1: FUSEKI KG -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_kg" value="Phase 1 · Fuseki Knowledge Graph" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="300" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="ontology" value="pmo.ttl Ontology&#xa;11 classes · 7 domains&#xa;3 failure modes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="20" y="35" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="fuseki" value="Apache Fuseki 5.1.0&#xa;TDB2 · port 3030&#xa;Dataset: /pmo" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="160" y="30" width="120" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="kalshi_etl" value="KalshiETL&#xa;get_hierarchy() fast path&#xa;URI: pmir:kalshi/{ticker}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="20" y="110" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="poly_etl" value="PolymarketETL&#xa;Keyword domain mapping&#xa;URI: pmir:polymarket/{id}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="160" y="110" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="forecast_etl" value="ForecastETL&#xa;Forecasts → RDF&#xa;pmo:LLMForecast triples" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="90" y="185" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sparql_queries" value="SPARQL Queries&#xa;market · forecast · benchmark" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_kg">
+          <mxGeometry x="90" y="255" width="120" height="15" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 2: RESEARCH AGENT -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_agent" value="Phase 2 · Research Agent" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="80" width="460" height="360" as="geometry" />
+        </mxCell>
+        <!-- LLM Client -->
+        <mxCell id="llm_client" value="LLMClient&#xa;OpenAI SDK (default)&#xa;Minimax / Moonshot via base_url&#xa;Anthropic placeholder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="20" y="35" width="130" height="65" as="geometry" />
+        </mxCell>
+        <!-- News Retriever -->
+        <mxCell id="news_retriever" value="NewsRetriever&#xa;DuckDuckGo (primary)&#xa;Exa API (EXA_API_KEY)&#xa;Temporal filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="165" y="35" width="130" height="65" as="geometry" />
+        </mxCell>
+        <!-- Classifier -->
+        <mxCell id="classifier" value="DomainClassifier&#xa;Kalshi: get_hierarchy()&#xa;Polymarket: keyword trie&#xa;→ LLM fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="310" y="35" width="130" height="65" as="geometry" />
+        </mxCell>
+        <!-- Forecaster pipeline -->
+        <mxCell id="forecaster" value="LLMForecaster Pipeline" style="swimlane;startSize=20;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="grp_agent">
+          <mxGeometry x="20" y="120" width="420" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="step_prompt" value="7-Step Prompt&#xa;(prompts.py)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="forecaster">
+          <mxGeometry x="10" y="30" width="90" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step_raw" value="raw condition&#xa;(no news)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="forecaster">
+          <mxGeometry x="115" y="30" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step_news" value="news condition&#xa;(snippets injected&#xa;after step 3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="forecaster">
+          <mxGeometry x="210" y="30" width="80" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="step_parse" value="Parse&#xa;FINAL_PROB&#xa;CI_LOW/HIGH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="forecaster">
+          <mxGeometry x="305" y="30" width="100" height="60" as="geometry" />
+        </mxCell>
+        <!-- Failure detector -->
+        <mxCell id="failure_det" value="FailureDetector&#xa;RecencyBias · RumourOverweighting&#xa;DefinitionDrift (regex)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="20" y="250" width="190" height="55" as="geometry" />
+        </mxCell>
+        <!-- Calibrator -->
+        <mxCell id="calibrator" value="Calibrator&#xa;Domain shrinkage → 0.5&#xa;Condition offsets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="230" y="250" width="190" height="55" as="geometry" />
+        </mxCell>
+        <!-- Signal output -->
+        <mxCell id="signal" value="ForecastSignal&#xa;prob · CI · edge · kelly_fraction&#xa;bet_direction · failure_modes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="grp_agent">
+          <mxGeometry x="130" y="320" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 3: FORECAST STORAGE -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_storage" value="Phase 3 · Forecast Storage" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="480" width="460" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="forecast_indexer" value="ForecastIndexer (Indexer subclass)&#xa;Stratified sample · 50/domain · resume cursor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="grp_storage">
+          <mxGeometry x="20" y="35" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="forecast_parquet" value="data/forecasts/&#xa;forecasts_YYYYMMDD.parquet&#xa;+ Brier score on-write" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="grp_storage">
+          <mxGeometry x="240" y="30" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 4: BACKTESTING -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_backtest" value="Phase 4 · Backtesting Framework" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="920" y="80" width="360" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="loader" value="loader.py&#xa;load_forecasts()&#xa;DuckDB filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="20" y="35" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="strategies" value="Strategies&#xa;FlatBet&#xa;KellyCriterion&#xa;ConfidenceScaled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="135" y="35" width="100" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="engine" value="BacktestEngine&#xa;Replay signals&#xa;P&amp;L ledger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="250" y="35" width="95" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics" value="ForecastingMetrics&#xa;Accuracy · Brier · ECE · LogLoss" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="20" y="130" width="155" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="trading_metrics" value="TradingMetrics&#xa;ROI · Sharpe · MaxDD · WinRate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="190" y="130" width="155" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="backtest_report" value="BacktestReport (Analysis subclass)&#xa;Equity curve · Calibration · Domain accuracy heatmap&#xa;Failure mode bar · CSV + PDF via save()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="grp_backtest">
+          <mxGeometry x="20" y="195" width="325" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 5: BENCHMARKS -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_bench" value="Phase 5 · Benchmark Suite  (all Analysis subclasses → make analyze)" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="920" y="400" width="720" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bench1" value="Benchmark 1&#xa;LLM Forecaster&#xa;Accuracy × Brier × ECE&#xa;by domain &amp; condition" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="grp_bench">
+          <mxGeometry x="10" y="35" width="125" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bench2" value="Benchmark 2&#xa;Cross-Platform&#xa;Kalshi vs Polymarket&#xa;Brier / ECE matched" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="grp_bench">
+          <mxGeometry x="148" y="35" width="125" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bench3" value="Benchmark 3&#xa;Failure Mode&#xa;Prevalence&#xa;Domain × mode table&#xa;+ Brier delta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="grp_bench">
+          <mxGeometry x="286" y="35" width="125" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bench4" value="Benchmark 4&#xa;News Sensitivity&#xa;Index (NSI)&#xa;Brier_raw − Brier_news&#xa;subcategory level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="grp_bench">
+          <mxGeometry x="424" y="35" width="125" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bench5" value="Benchmark 5&#xa;Temporal Decay&#xa;Accuracy vs days-to-close&#xa;Breakeven horizon&#xa;per domain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="grp_bench">
+          <mxGeometry x="562" y="35" width="148" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- PHASE 6: KG UPDATE LOOP -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_loop" value="Phase 6 · KG Update Loop" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="920" y="600" width="360" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="update_loop" value="update_loop.py&#xa;run_kg_update()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="grp_loop">
+          <mxGeometry x="20" y="35" width="110" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="learnings" value="Fuseki graph/learnings&#xa;pmo:domainAccuracy&#xa;pmo:failureModeRate&#xa;pmo:newsSensitivityIndex&#xa;pmo:breakEvenHorizon" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="grp_loop">
+          <mxGeometry x="150" y="30" width="190" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- EXTERNAL SERVICES (right column) -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_ext" value="External Services" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="80" width="260" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="openai" value="OpenAI API&#xa;gpt-4o (default)&#xa;LLM_API_KEY" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.general;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_ext">
+          <mxGeometry x="20" y="35" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="minimax" value="Minimax / Moonshot&#xa;OpenAI SDK +&#xa;custom base_url" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_ext">
+          <mxGeometry x="140" y="35" width="105" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ddg" value="DuckDuckGo Search&#xa;duckduckgo-search&#xa;No API key required" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_ext">
+          <mxGeometry x="20" y="110" width="105" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="exa" value="Exa API&#xa;exa-py · neural search&#xa;EXA_API_KEY (optional)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="grp_ext">
+          <mxGeometry x="140" y="110" width="105" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="anthropic" value="Anthropic Claude&#xa;ANTHROPIC_API_KEY&#xa;(placeholder — future)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;fontSize=10;dashed=1;" vertex="1" parent="grp_ext">
+          <mxGeometry x="70" y="185" width="130" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- OUTPUT -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="grp_output" value="Outputs" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="400" width="260" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="out_pdf" value="PDF Figures&#xa;output/*.pdf" style="shape=mxgraph.floorplan.wall;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="grp_output">
+          <mxGeometry x="20" y="35" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="out_csv" value="CSV Data&#xa;output/*.csv" style="shape=mxgraph.floorplan.wall;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="grp_output">
+          <mxGeometry x="140" y="35" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="out_parquet" value="Forecast Parquet&#xa;data/forecasts/*.parquet" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="grp_output">
+          <mxGeometry x="20" y="105" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="out_kg" value="KG Learnings&#xa;graph/learnings&#xa;SPARQL queryable" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="grp_output">
+          <mxGeometry x="140" y="105" width="100" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- EDGES — Data Sources → KG ETL -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="e1" value="DuckDB glob" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="kalshi_parquet" target="kalshi_etl" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="DuckDB glob" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="poly_parquet" target="poly_etl" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ETL → Fuseki (within KG group — represented by arrows to fuseki) -->
+        <mxCell id="e3" value="Turtle batches&#xa;(500 triples/batch)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="kalshi_etl" target="fuseki" parent="grp_kg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="Turtle batches" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="poly_etl" target="fuseki" parent="grp_kg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="GSP upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="forecast_etl" target="fuseki" parent="grp_kg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="OWL/Turtle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;fontSize=9;" edge="1" source="ontology" target="fuseki" parent="grp_kg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Kalshi/Poly parquet → ForecastIndexer -->
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="kalshi_parquet" target="forecast_indexer" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="490" />
+              <mxPoint x="410" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7b" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;entryX=0;entryY=0.7;fontSize=9;" edge="1" source="poly_parquet" target="forecast_indexer" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="490" />
+              <mxPoint x="410" y="536" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Agent → ForecastIndexer (signal) -->
+        <mxCell id="e8" value="ForecastSignal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=9;fontStyle=1;" edge="1" source="signal" target="forecast_indexer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ForecastIndexer → Parquet -->
+        <mxCell id="e9" value="write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="forecast_indexer" target="forecast_parquet" parent="grp_storage">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Forecast Parquet → ForecastETL -->
+        <mxCell id="e10" value="read parquet" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=9;" edge="1" source="forecast_parquet" target="forecast_etl" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="640" />
+              <mxPoint x="190" y="640" />
+              <mxPoint x="190" y="570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Forecast Parquet → Backtest loader -->
+        <mxCell id="e11" value="load_forecasts()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="forecast_parquet" target="loader" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="540" />
+              <mxPoint x="900" y="115" />
+              <mxPoint x="930" y="115" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Forecast Parquet → Benchmarks -->
+        <mxCell id="e12" value="load_forecasts()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="forecast_parquet" target="grp_bench" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="540" />
+              <mxPoint x="910" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Backtest → output -->
+        <mxCell id="e13" value="save() → PDF/CSV" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.3;fontSize=9;" edge="1" source="backtest_report" target="out_pdf" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Benchmarks → output -->
+        <mxCell id="e14" value="save() → PDF/CSV" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.7;fontSize=9;" edge="1" source="grp_bench" target="out_csv" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Benchmarks → KG Update Loop -->
+        <mxCell id="e15" value="trigger update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=1;entryX=0;entryY=0;fontSize=9;" edge="1" source="grp_bench" target="grp_loop" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="580" />
+              <mxPoint x="910" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- KG Update Loop → Fuseki (write back learnings) -->
+        <mxCell id="e16" value="SPARQL INSERT&#xa;domainAccuracy · NSI&#xa;failureModeRate · breakeven" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontSize=9;fontStyle=2;" edge="1" source="grp_loop" target="grp_kg" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="870" y="665" />
+              <mxPoint x="870" y="800" />
+              <mxPoint x="190" y="800" />
+              <mxPoint x="190" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- KG (SPARQL) → Agent Classifier (historical domain accuracy context) -->
+        <mxCell id="e17" value="historical accuracy&#xa;context lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.7;fontSize=9;fontStyle=2;dashed=1;" edge="1" source="grp_kg" target="classifier" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="460" />
+              <mxPoint x="560" y="460" />
+              <mxPoint x="560" y="320" />
+              <mxPoint x="710" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- LLMClient → OpenAI -->
+        <mxCell id="e18" value="completions API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.3;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="llm_client" target="openai" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="135" />
+              <mxPoint x="860" y="130" />
+              <mxPoint x="1340" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- NewsRetriever → DDG -->
+        <mxCell id="e19" value="news search" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="news_retriever" target="ddg" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="168" />
+              <mxPoint x="860" y="350" />
+              <mxPoint x="1340" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- KG Update Loop → out_kg -->
+        <mxCell id="e20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.9;fontSize=9;" edge="1" source="learnings" target="out_kg" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1310" y="665" />
+              <mxPoint x="1310" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- LEGEND -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <mxCell id="legend_title" value="Legend" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="640" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="Phase 1 · KG" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="40" y="665" width="80" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Phase 2 · Agent" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="130" y="665" width="80" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="Phase 3 · Storage" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="220" y="665" width="85" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="Phase 4 · Backtest" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="40" y="695" width="85" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="Phase 5 · Benchmarks" style="rounded=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="135" y="695" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="Phase 6 · KG Loop" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="245" y="695" width="90" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_dashed" value="Feedback / future path" style="edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=9;endArrow=open;" edge="1" parent="1">
+          <mxGeometry x="40" y="730" width="200" height="20" as="geometry">
+            <mxPoint x="40" y="740" as="sourcePoint" />
+            <mxPoint x="160" y="740" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

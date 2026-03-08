@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: pmo-kg-explorer
+    runtime: docker
+    dockerfilePath: ./Dockerfile.explorer
+    plan: free
+    envVars:
+      - key: EXPLORER_PORT
+        value: "8765"
+      - key: KG_DATA_PATH
+        value: src/kg/explorer/static/graph.nq
+    healthCheckPath: /api/stats
+    autoDeploy: true
