@@ -48,6 +48,8 @@ class BaseETL(ABC):
             logger.warning("data_dir does not exist: %s", data_dir)
             return 0
 
+        run_id = self._start_pipeline_run(str(data_dir))
+
         sql = self.build_query(data_dir)
         con = duckdb.connect()
         rel = con.execute(sql)
@@ -56,32 +58,60 @@ class BaseETL(ABC):
         batches_uploaded = 0
         total_rows = 0
 
-        while True:
-            chunk = rel.fetchmany(BATCH_SIZE)
-            if not chunk:
-                break
+        try:
+            while True:
+                chunk = rel.fetchmany(BATCH_SIZE)
+                if not chunk:
+                    break
 
-            col_names = [desc[0] for desc in rel.description]
-            rows = [dict(zip(col_names, row)) for row in chunk]
-            batch.extend(rows)
-            total_rows += len(rows)
+                col_names = [desc[0] for desc in rel.description]
+                rows = [dict(zip(col_names, row)) for row in chunk]
+                batch.extend(rows)
+                total_rows += len(rows)
 
-            if len(batch) >= BATCH_SIZE:
+                if len(batch) >= BATCH_SIZE:
+                    turtle = self.rows_to_turtle(batch)
+                    self.client.upload_turtle(turtle, self.graph_uri)
+                    batches_uploaded += 1
+                    logger.info("Uploaded batch %d (%d rows so far)", batches_uploaded, total_rows)
+                    batch = []
+
+            if batch:
                 turtle = self.rows_to_turtle(batch)
                 self.client.upload_turtle(turtle, self.graph_uri)
                 batches_uploaded += 1
-                logger.info("Uploaded batch %d (%d rows so far)", batches_uploaded, total_rows)
-                batch = []
 
-        # Upload remaining rows
-        if batch:
-            turtle = self.rows_to_turtle(batch)
-            self.client.upload_turtle(turtle, self.graph_uri)
-            batches_uploaded += 1
+            con.close()
+            logger.info("ETL complete: %d rows in %d batches", total_rows, batches_uploaded)
 
-        con.close()
-        logger.info("ETL complete: %d rows in %d batches", total_rows, batches_uploaded)
+            self._finish_pipeline_run(run_id, total_rows, batches_uploaded * BATCH_SIZE * 10, "success")
+        except Exception as exc:
+            self._finish_pipeline_run(run_id, total_rows, 0, "failed", error=str(exc))
+            raise
+
         return batches_uploaded
+
+    # ── Pipeline run tracking ──────────────────────────────────────────────────
+
+    @staticmethod
+    def _start_pipeline_run(file: str) -> str | None:
+        try:
+            from src.kg.pipeline_store import start_run
+            return start_run(source="etl", file=file)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _finish_pipeline_run(
+        run_id: str | None, entities: int, triples: int, status: str, error: str | None = None
+    ) -> None:
+        if not run_id:
+            return
+        try:
+            from src.kg.pipeline_store import finish_run
+            finish_run(run_id, entities=entities, triples=triples, status=status, error=error)
+        except Exception:
+            pass
 
     # ── Turtle helpers ────────────────────────────────────────────────────────
 

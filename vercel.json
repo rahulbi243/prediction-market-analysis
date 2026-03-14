@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "src/kg/explorer/static/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/src/kg/explorer/static/$1" },
-    { "src": "/", "dest": "/src/kg/explorer/static/index.html" }
-  ]
+  "buildCommand": "cd dashboard && npm install && npm run build",
+  "outputDirectory": "dashboard/.next",
+  "installCommand": "echo 'install handled in buildCommand'",
+  "framework": "nextjs"
 }
