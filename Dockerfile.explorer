@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Python deps ──────────────────────────────────────────────────────────────
+# ── Python deps (v2 — bust Render cache) ────────────────────────────────────
 RUN pip install --no-cache-dir \
     fastapi>=0.111.0 \
     "uvicorn[standard]>=0.30.0" \
